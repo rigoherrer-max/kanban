@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <meta charset="UTF-8" />
+    <title>Tablero Kanban</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #434750;
+            margin: 20px;
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            vertical-align: top;
+            padding: 10px;
+            position: relative;
+            text-align: center;
+        }
+        th {
+            background: #002080;
+            color: #fff;
+            text-align: center;
+        }
+        button {
+            background: #000000;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        button:hover {
+            background: #002080;
+        }
+        .btn-principal {
+            min-width: 160px;
+            height: 40px;
+            font-size: 16px;
+            display: inline-block;
+            vertical-align: top;
+            text-align: center;
+            line-height: 40px;
+            margin-right: 10px;
+        }
+        .kanban-col {
+            min-height: 200px;
+        }
+        .eliminar-btn {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            display: none;
+            background: #e11d48;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .tarjeta:hover .eliminar-btn {
+            display: block;
+        }
+        .celda-eliminar {
+            width: 20px;
+        }
+        .eliminar-fila-btn {
+            display: none;
+            background: #002080;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(45deg);
+        }
+        tr:hover .eliminar-fila-btn {
+            display: block;
+        }
+        #formNuevoProyecto, #formActualizar {
+            display: none;
+            min-height: 200px;
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #434750;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            z-index: 1000;
+            width: 350px;
+            border: 4px solid #002080;
+            text-align: center;
+        }
+        #formNuevoProyecto.visible, #formActualizar.visible {
+            display: block;
+        }
+        #formNuevoProyecto h3, #formActualizar h3 {
+            display: none;
+        }
+        #formNuevoProyecto label, #formActualizar label {
+            color: white;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+            text-align: left;
+            font-family: Arial, sans-serif;
+            font-size: 1.2em;
+        }
+        #formNuevoProyecto select,
+        #formNuevoProyecto input[type="text"],
+        #formActualizar input[type="text"] {
+            width: 95%;
+            padding: 8px;
+            margin-bottom: 20px;
+            background-color: #8c8f95;
+            border: none;
+            border-radius: 4px;
+            color: black;
+            font-size: 1em;
+            text-align: left;
+        }
+        .btn-guardar-nuevo, .btn-cancelar-nuevo, .btn-guardar-actualizar, .btn-cancelar-actualizar {
+            width: 100%;
+            padding: 10px 0;
+            margin-top: 10px;
+            background: black;
+            color: white;
+            border-radius: 5px;
+        }
+        .btn-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .btn-actions button {
+            width: 50%;
+        }
+        .btn-cancelar-nuevo {
+            background-color: #e11d48;
+        }
+        .tarjeta {
+            width: 250px;
+            height: 230px;
+            background: #fff176;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 2px 4px 6px rgba(0,0,0,0.2);
+            overflow-y: auto;
+            position: relative;
+            font-family: "Comic Sans MS", cursive, sans-serif;
+            text-align: left;
+        }
+        #btnAcercaDe {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(250,128,114,0.5);
+        }
+        .modal-content {
+            background-color: #1A160A;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        #cerrarModal {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .cuadro-dialogo {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #D9C075;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        /* Estilos del formulario de login */
+        #login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #434750;
+            z-index: 2000;
+        }
+        #login-form {
+            background: #434750;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            border: 4px solid #002080;
+            width: 350px;
+            text-align: center;
+        }
+        #login-form h2 {
+            color: white;
+            font-family: "Comic Sans MS", cursive, sans-serif;
+            margin-bottom: 20px;
+        }
+        #login-form label {
+            color: white;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+            text-align: left;
+            font-family: Arial, sans-serif;
+            font-size: 1.2em;
+        }
+        #login-form input[type="text"],
+        #login-form input[type="password"] {
+            width: 95%;
+            padding: 8px;
+            margin-bottom: 20px;
+            background-color: #8c8f95;
+            border: none;
+            border-radius: 4px;
+            color: black;
+            font-size: 1em;
+            text-align: left;
+        }
+        #login-form button {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.2em;
+            background-color: black;
+            color: white;
+        }
+        .oculto {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-container">
+        <div id="login-form">
+            <h2>Iniciar Sesión</h2>
+            <label for="username">Usuario:</label>
+            <input type="text" id="username" value="Rigoherrera" disabled>
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password">
+            <button id="login-btn">Acceder</button>
+            <div id="alerta-error" class="oculto">Contraseña incorrecta. Inténtalo de nuevo.</div>
+        </div>
+    </div>
+    <div id="contenido" class="oculto">
+        <h2 style="font-family: Comic Sans MS; color: White; font-size: 50px;">📌Tablero Digital Kanban</h2>
+        <h2 style="font-family: Comic Sans MS; color: White; font-size: 20px;">Rigoberto Herrera Soto</h2>
+
+        <button id="btnNuevoProyecto" class="btn-principal">Nuevo Proyecto</button>
+        <button id="btnIncidentes" class="btn-principal">Gestión de Riesgos</button>
+        <button id="btnAcercaDe" class="btn-principal">Acerca de</button>
+
+        <div id="ventanaAcercaDe" class="modal">
+            <div class="modal-content">
+                <button id="cerrarModal">&times;</button>
+                <div class="cuadro-dialogo">
+                    <h2>¿Tablero Digital Kanban</h2>
+                    <br>
+                    <h2>¿Listo para llevar la gestión de tus proyectos al siguiente nivel?</h2>
+                    <p>Imagina un espacio donde tus ideas, tareas y proyectos cobran vida de forma visual y organizada. Eso es exactamente lo que te ofrece nuestro Tablero Digital Kanban.</p>
+                    <p>Más que una sencilla herramienta, es un aliado para tu creatividad y productividad. Visualiza el progreso de cada tarea, identifica cuellos de botella y colabora de manera fluida con tu equipo, todo en un solo lugar. Con una interfaz intuitiva y adaptable, te ayuda a mantener el enfoque y transformar el caos en claridad.</p>
+                    <p>Es hora de dejar atrás las listas interminables y darle la bienvenida a una forma de trabajo más eficiente, transparente y emocionante.</p>
+                    <p>Desarrollado por Rigoberto Herrera Soto.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="formNuevoProyecto">
+            <label>Proyecto:</label>
+            <input type="text" id="txtProyecto">
+            <label>Persona o Área Involucrada:</label>
+            <input type="text" id="txtPersona">
+            <label>Dinámica del Proyecto:</label>
+            <input type="text" id="txtDinamica">
+            <div class="btn-actions">
+                <button id="guardarNuevoBtn" class="btn-guardar-nuevo">Guardar</button>
+                <button id="cancelarNuevoBtn" class="btn-cancelar-nuevo">Cancelar</button>
+            </div>
+        </div>
+
+        <div id="formActualizar">
+            <label>Actualiza tu Proyecto:</label>
+            <input type="text" id="txtActualizar">
+            <button onclick="guardarActualizacion()" class="btn-guardar-actualizar">Guardar</button>
+            <button onclick="cerrarFormularioActualizar()" class="btn-cancelar-actualizar">Cancelar</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Por Hacer</th>
+                    <th>En Proceso</th>
+                    <th>En Pruebas</th>
+                    <th>Finalizado</th>
+                    <th class="celda-eliminar"></th>
+                </tr>
+            </thead>
+            <tbody id="tablaFilas"></tbody>
+        </table>
+    </div>
+    <script>
+        let filaEnEdicionActualizar = null;
+        let columnaActualizar = null;
+
+        const loginContainer = document.getElementById('login-container');
+        const loginBtn = document.getElementById('login-btn');
+        const passwordInput = document.getElementById('password');
+        const alertaError = document.getElementById('alerta-error');
+        const contenidoPrincipal = document.getElementById('contenido');
+        const body = document.body;
+
+        loginBtn.addEventListener('click', iniciarSesion);
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                iniciarSesion();
+            }
+        });
+
+        function iniciarSesion() {
+            const contrasena = passwordInput.value;
+            const contrasenaCorrecta = "2407";
+
+            if (contrasena === contrasenaCorrecta) {
+                loginContainer.classList.add('oculto');
+                contenidoPrincipal.classList.remove('oculto');
+                body.style.overflow = 'auto';
+                cargarDatos();
+            } else {
+                alertaError.classList.remove('oculto');
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        }
+
+        function fechaActual() {
+            const f = new Date();
+            return f.toLocaleDateString() + ' ' + f.toLocaleTimeString();
+        }
+
+        function limpiarFormularioNuevo() {
+            document.getElementById('txtProyecto').value = '';
+            document.getElementById('txtPersona').value = '';
+            document.getElementById('txtDinamica').value = '';
+        }
+
+        function cerrarFormularioNuevo() {
+            document.getElementById('formNuevoProyecto').classList.remove('visible');
+            limpiarFormularioNuevo();
+        }
+
+        function limpiarFormularioActualizar() {
+            document.getElementById('txtActualizar').value = '';
+            filaEnEdicionActualizar = null;
+            columnaActualizar = null;
+        }
+
+        function cerrarFormularioActualizar() {
+            document.getElementById('formActualizar').classList.remove('visible');
+            limpiarFormularioActualizar();
+        }
+
+        function crearTarjetaEnColumna(fila, columnaIndex, descripcion) {
+            const tarjeta = document.createElement('div');
+            tarjeta.className = 'tarjeta';
+            tarjeta.innerHTML = `
+                <div class="fecha">${fechaActual()}</div>
+                <strong>${descripcion}</strong>
+            `;
+
+            const td = fila.children[columnaIndex];
+            td.innerHTML = '';
+            td.appendChild(tarjeta);
+
+            const btnAct = document.createElement('button');
+            btnAct.innerText = 'Actualizar Proyecto';
+            btnAct.onclick = () => abrirFormularioActualizar(fila, columnaIndex);
+            td.appendChild(btnAct);
+
+            const btnEliminar = document.createElement('button');
+            btnEliminar.className = 'eliminar-btn';
+            btnEliminar.innerText = 'Eliminar';
+            btnEliminar.onclick = () => {
+                tarjeta.remove();
+                guardarDatos();
+            };
+            tarjeta.appendChild(btnEliminar);
+        }
+        
+        function abrirFormularioActualizar(fila, columnaIndex) {
+            filaEnEdicionActualizar = fila;
+            columnaActualizar = columnaIndex;
+            const tarjeta = fila.children[columnaIndex].querySelector('.tarjeta');
+            let textoActual = '';
+            if (tarjeta) {
+                const strong = tarjeta.querySelector('strong');
+                textoActual = strong ? strong.innerText : '';
+            }
+            document.getElementById('txtActualizar').value = textoActual;
+            document.getElementById('formActualizar').classList.add('visible');
+        }
+
+        function guardarActualizacion() {
+            if (filaEnEdicionActualizar && columnaActualizar !== null) {
+                const nuevoTexto = document.getElementById('txtActualizar').value.trim();
+                if (!nuevoTexto) {
+                    alert('El campo no puede estar vacío.');
+                    return;
+                }
+                crearTarjetaEnColumna(filaEnEdicionActualizar, columnaActualizar, nuevoTexto);
+                guardarDatos();
+                cerrarFormularioActualizar();
+            }
+        }
+
+        function confirmarEliminarFila(fila) {
+            const contrasena = prompt("Por favor, introduce la contraseña para eliminar la fila:");
+            if (contrasena === "2407") {
+                fila.remove();
+                guardarDatos();
+            } else {
+                alert("Contraseña incorrecta. La fila no será eliminada.");
+            }
+        }
+
+        function guardarNuevoProyecto() {
+            const proyecto = document.getElementById('txtProyecto').value.trim();
+            const persona = document.getElementById('txtPersona').value.trim();
+            const dinamica = document.getElementById('txtDinamica').value.trim();
+
+            if (!proyecto || !persona || !dinamica) {
+                alert('Por favor, complete todos los campos.');
+                return;
+            }
+
+            const tbody = document.getElementById('tablaFilas');
+            const fila = document.createElement('tr');
+
+            const celdaHacer = document.createElement('td');
+            const tarjetaH = document.createElement('div');
+            tarjetaH.className = 'tarjeta';
+            tarjetaH.innerHTML = `
+                <div class="fecha">${fechaActual()}</div>
+                <strong>Proyecto: ${proyecto}</strong><br>
+                Área: ${persona}<br>
+                Dinámica: ${dinamica}
+            `;
+            celdaHacer.appendChild(tarjetaH);
+            
+            fila.appendChild(celdaHacer);
+
+            for (let i = 1; i <= 3; i++) {
+                const td = document.createElement('td');
+                const btnAdd = document.createElement('button');
+                btnAdd.innerText = 'Actualizar Proyecto';
+                btnAdd.onclick = () => abrirFormularioActualizar(fila, i);
+                td.appendChild(btnAdd);
+                fila.appendChild(td);
+            }
+
+            const celdaEliminar = document.createElement('td');
+            celdaEliminar.className = 'celda-eliminar';
+            const btnEliminarFila = document.createElement('button');
+            btnEliminarFila.className = 'eliminar-fila-btn';
+            btnEliminarFila.innerText = 'X';
+            btnEliminarFila.onclick = () => {
+                confirmarEliminarFila(fila);
+            };
+            celdaEliminar.appendChild(btnEliminarFila);
+            fila.appendChild(celdaEliminar);
+            
+            tbody.appendChild(fila);
+            guardarDatos();
+            limpiarFormularioNuevo();
+            cerrarFormularioNuevo();
+        }
+
+        function guardarDatos() {
+            const filas = [];
+            document.querySelectorAll('#tablaFilas tr').forEach(tr => {
+                const hacerTd = tr.children[0];
+                const hacerDiv = hacerTd.querySelector('.tarjeta');
+                if (!hacerDiv) {
+                    return;
+                }
+
+                const fecha = hacerDiv.querySelector('.fecha') ? hacerDiv.querySelector('.fecha').innerText : '';
+                const strong = hacerDiv.querySelector('strong');
+                const proyecto = strong ? strong.innerText.replace('Proyecto: ', '') : '';
+                const innerHTML = hacerDiv.innerHTML;
+                const personaMatch = innerHTML.match(/Área: ([^<]+)/);
+                const persona = personaMatch ? personaMatch[1].trim() : '';
+                const dinamicaMatch = innerHTML.match(/Dinámica: ([^<]+)/);
+                const dinamica = dinamicaMatch ? dinamicaMatch[1].trim() : '';
+
+                const columnas = [];
+                for (let i = 1; i < 4; i++) {
+                    const tarjetaDiv = tr.children[i].querySelector('.tarjeta');
+                    if (tarjetaDiv) {
+                        const fechaCol = tarjetaDiv.querySelector('.fecha') ? tarjetaDiv.querySelector('.fecha').innerText : '';
+                        const strongCol = tarjetaDiv.querySelector('strong');
+                        const descripcionCol = strongCol ? strongCol.innerText : '';
+                        columnas.push({
+                            fecha: fechaCol,
+                            descripcion: descripcionCol
+                        });
+                    } else {
+                        columnas.push({ fecha: '', descripcion: '' });
+                    }
+                }
+                filas.push({ hacer: { fecha, proyecto, persona, dinamica }, columnas });
+            });
+            localStorage.setItem('kanbanData', JSON.stringify(filas));
+        }
+
+        function cargarDatos() {
+            const datos = localStorage.getItem('kanbanData');
+            if (datos) {
+                const filas = JSON.parse(datos);
+                const tbody = document.getElementById('tablaFilas');
+                tbody.innerHTML = '';
+                filas.forEach(filaData => {
+                    const fila = document.createElement('tr');
+                    
+                    const celdaHacer = document.createElement('td');
+                    const tarjetaH = document.createElement('div');
+                    tarjetaH.className = 'tarjeta';
+                    tarjetaH.innerHTML = `
+                        <div class="fecha">${filaData.hacer.fecha}</div>
+                        <strong>Proyecto: ${filaData.hacer.proyecto}</strong><br>
+                        Área: ${filaData.hacer.persona}<br>
+                        Dinámica: ${filaData.hacer.dinamica}
+                    `;
+                    celdaHacer.appendChild(tarjetaH);
+                    fila.appendChild(celdaHacer);
+
+                    filaData.columnas.forEach((colData, i) => {
+                        const td = document.createElement('td');
+                        if (colData.descripcion) {
+                            const tarjeta = document.createElement('div');
+                            tarjeta.className = 'tarjeta';
+                            tarjeta.innerHTML = `
+                                <div class="fecha">${colData.fecha}</div>
+                                <strong>${colData.descripcion}</strong>
+                            `;
+                            const btnEliminar = document.createElement('button');
+                            btnEliminar.className = 'eliminar-btn';
+                            btnEliminar.innerText = 'Eliminar';
+                            btnEliminar.onclick = (event) => {
+                                tarjeta.remove();
+                                guardarDatos();
+                            };
+                            tarjeta.appendChild(btnEliminar);
+                            td.appendChild(tarjeta);
+                        }
+                        const btnAdd = document.createElement('button');
+                        btnAdd.innerText = 'Actualizar Proyecto';
+                        btnAdd.onclick = () => abrirFormularioActualizar(fila, i + 1);
+                        td.appendChild(btnAdd);
+                        fila.appendChild(td);
+                    });
+
+                    const celdaEliminar = document.createElement('td');
+                    celdaEliminar.className = 'celda-eliminar';
+                    const btnEliminarFila = document.createElement('button');
+                    btnEliminarFila.className = 'eliminar-fila-btn';
+                    btnEliminarFila.innerText = 'X';
+                    btnEliminarFila.onclick = () => {
+                        confirmarEliminarFila(fila);
+                    };
+                    celdaEliminar.appendChild(btnEliminarFila);
+                    fila.appendChild(celdaEliminar);
+
+                    tbody.appendChild(fila);
+                });
+            }
+        }
+
+        document.getElementById('btnNuevoProyecto').addEventListener('click', () => {
+            document.getElementById('formNuevoProyecto').classList.add('visible');
+        });
+
+        document.getElementById('btnIncidentes').addEventListener('click', () => {
+            console.log('Botón de Gestión de Riesgos presionado');
+            alert('Funcionalidad para Gestión de Riesgos en desarrollo.');
+        });
+
+        document.getElementById('guardarNuevoBtn').addEventListener('click', guardarNuevoProyecto);
+        document.getElementById('cancelarNuevoBtn').addEventListener('click', cerrarFormularioNuevo);
+
+        document.getElementById('btnAcercaDe').addEventListener('click', () => {
+            document.getElementById('ventanaAcercaDe').style.display = 'block';
+        });
+
+        document.getElementById('cerrarModal').addEventListener('click', () => {
+            document.getElementById('ventanaAcercaDe').style.display = 'none';
+        });
+
+        window.onclick = (event) => {
+            const ventana = document.getElementById('ventanaAcercaDe');
+            if (event.target === ventana) {
+                ventana.style.display = 'none';
+            }
+        };
+    </script>
+</body>
+</html>
