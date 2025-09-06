@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Gestión de Riesgos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #434750;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            vertical-align: top;
+            padding: 10px;
+            position: relative;
+            text-align: center;
+            color: white;
+            word-wrap: break-word;
+        }
+        th {
+            background: #e11d48;
+            color: #fff;
+            text-align: center;
+        }
+        h2 {
+            font-family: 'Times New Roman', Times, serif;
+            color: White;
+            font-size: 50px;
+        }
+        h2:nth-of-type(2) {
+            font-size: 20px;
+        }
+        button {
+            background: #000000;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        button:hover {
+            background: #e11d48;
+        }
+        .btn-principal {
+            width: 150px;
+            height: 40px;
+            font-size: 16px;
+        }
+        #formNuevoRiesgo, #formIngresarDatos {
+            display: none;
+            min-height: 200px;
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #434750;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            z-index: 1000;
+            width: 350px;
+            border: 4px solid #e11d48;
+            text-align: center;
+        }
+        #formNuevoRiesgo.visible, #formIngresarDatos.visible {
+            display: block;
+        }
+        #formNuevoRiesgo label, #formIngresarDatos label {
+            color: white;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+            text-align: left;
+            font-family: Arial, sans-serif;
+            font-size: 1.2em;
+        }
+        #formNuevoRiesgo select,
+        #formNuevoRiesgo input[type="text"],
+        #formIngresarDatos input[type="text"] {
+            width: 95%;
+            padding: 8px;
+            margin-bottom: 20px;
+            background-color: #8c8f95;
+            border: none;
+            border-radius: 4px;
+            color: black;
+            font-size: 1em;
+            text-align: left;
+        }
+        .btn-guardar-nuevo, .btn-cancelar-nuevo, .btn-guardar-datos, .btn-cancelar-datos {
+            width: 100%;
+            padding: 10px 0;
+            margin-top: 10px;
+            background: black;
+            color: white;
+            border-radius: 5px;
+        }
+        .btn-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .btn-actions button {
+            width: 50%;
+        }
+        .btn-cancelar-nuevo, .btn-cancelar-datos {
+            background-color: #e11d48;
+        }
+        .celda-fecha {
+            width: 120px;
+        }
+        .celda-acciones {
+            width: 60px;
+        }
+        .celda-finalizar {
+            width: 90px;
+        }
+        .celda-categoria {
+            width: auto;
+        }
+        .btn-eliminar-fila {
+            background-color: #c0c0c0;
+            color: black;
+            border-top: 2px solid #ffffff;
+            border-left: 2px solid #ffffff;
+            border-right: 2px solid #808080;
+            border-bottom: 2px solid #808080;
+            padding: 4px 8px;
+            border-radius: 0;
+            cursor: pointer;
+            font-size: 12px;
+            box-shadow: none;
+        }
+        .btn-eliminar-fila:active {
+            border-top: 2px solid #808080;
+            border-left: 2px solid #808080;
+            border-right: 2px solid #ffffff;
+            border-bottom: 2px solid #ffffff;
+            background-color: #d0d0d0;
+        }
+        .btn-eliminar-windows {
+            background-color: #c0c0c0;
+            color: black;
+            border-top: 2px solid #ffffff;
+            border-left: 2px solid #ffffff;
+            border-right: 2px solid #808080;
+            border-bottom: 2px solid #808080;
+            font-size: 18px;
+            width: 30px;
+            height: 30px;
+            line-height: 1;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0;
+            cursor: pointer;
+        }
+        .btn-eliminar-windows:active {
+            border-top: 2px solid #808080;
+            border-left: 2px solid #808080;
+            border-right: 2px solid #ffffff;
+            border-bottom: 2px solid #ffffff;
+            background-color: #d0d0d0;
+        }
+        .btn-ingresar-datos {
+            background-color: #c0c0c0;
+            color: black;
+            border-top: 2px solid #ffffff;
+            border-left: 2px solid #ffffff;
+            border-right: 2px solid #808080;
+            border-bottom: 2px solid #808080;
+            padding: 4px 8px;
+            border-radius: 0;
+            cursor: pointer;
+            font-size: 12px;
+            box-shadow: none;
+            width: 100px;
+            white-space: nowrap;
+        }
+        .btn-ingresar-datos:active {
+            border-top: 2px solid #808080;
+            border-left: 2px solid #808080;
+            border-right: 2px solid #ffffff;
+            border-bottom: 2px solid #ffffff;
+            background-color: #d0d0d0;
+        }
+        .btn-finalizar {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .btn-finalizar:hover {
+            background-color: #45a049;
+        }
+
+        /* Estilos para la ventana de inicio de sesión */
+        .login-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .login-box {
+            background: #434750;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            text-align: center;
+            border: 4px solid #e11d48;
+            width: 300px;
+        }
+        .login-box label {
+            color: white;
+            font-size: 1.2em;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .login-box input {
+            width: 90%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #8c8f95;
+            color: black;
+            font-size: 1em;
+        }
+        .login-box input:disabled {
+            background-color: #555;
+            color: #bbb;
+        }
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.1em;
+            background: #e11d48;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div id="login-container" class="login-container">
+    <div class="login-box">
+        <h2 style="font-family: Arial, sans-serif;">🔒 Inicio de Sesión</h2>
+        <label for="username">Usuario:</label>
+        <input type="text" id="username" value="RigoHerrera" disabled>
+        <label for="password">Contraseña:</label>
+        <input type="password" id="password" placeholder="Ingrese la contraseña">
+        <button onclick="login()">Iniciar Sesión</button>
+    </div>
+</div>
+
+<div id="main-content" style="display: none;">
+    <h2 style="font-family: 'Times New Roman', Times, serif; color: White; font-size: 50px;">🚫Gestión de Riesgos</h2>
+    <h2 style="font-family: 'Times New Roman', Times, serif; color: White; font-size: 20px;">Rigoberto Herrera Soto</h2>
+
+    <button id="btnNuevoRiesgo" class="btn-principal">Nuevo Riesgo</button>
+    <a href="index.html" style="text-decoration: none;">
+        <button class="btn-principal">Volver a Kanban</button>
+    </a>
+
+    <div id="formNuevoRiesgo">
+        <label>Riesgo o Incidente:</label>
+        <select id="selCategoria">
+             <option>ACCIDENTE</option>
+        <option>CONFLICTO</option>
+        <option>DESASTRE NATURAL</option>
+        <option>FALLA DEL SISTEMA</option>
+        <option>FALLA HUMANA</option>
+        <option>FALLA MECÁNICA</option>
+        <option>FUGA DE LIQUIDOS</option>
+        <option>INCIDENTE</option>
+        <option>NEGLIGENCIA</option>
+        <option>OTRO PROBLEMA</option>
+        <option>REPARACIÓN URGENTE</option>
+        </select>
+        <div class="btn-actions">
+            <button id="guardarRiesgoBtn" class="btn-guardar-nuevo">Guardar</button>
+            <button id="cancelarRiesgoBtn" class="btn-cancelar-nuevo">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="formIngresarDatos">
+        <label id="lblIngresarDatos"></label>
+        <input type="text" id="txtIngresarDatos">
+        <div class="btn-actions">
+            <button id="guardarDatosBtn" class="btn-guardar-datos">Guardar</button>
+            <button id="cancelarDatosBtn" class="btn-cancelar-datos">Cancelar</button>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th class="celda-fecha">Fecha</th>
+                <th class="celda-categoria">Categoría</th>
+                <th>Descripción del Riesgo</th>
+                <th>Persona o Área Involucrada</th>
+                <th>Acciones Tomadas</th>
+                <th class="celda-finalizar">Finalizar</th>
+                <th class="celda-acciones"></th>
+            </tr>
+        </thead>
+        <tbody id="tablaRiesgos"></tbody>
+    </table>
+</div>
+
+<script>
+    let celdaEnEdicion = null;
+    let labelParaFormulario = '';
+    const PASSWORD_ELIMINAR = "2407";
+    const PASSWORD_LOGIN = "2407";
+
+    function login() {
+        const passwordInput = document.getElementById('password').value;
+        if (passwordInput === PASSWORD_LOGIN) {
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            sessionStorage.setItem('loggedIn', 'true');
+            cargarDatos();
+        } else {
+            alert("Contraseña incorrecta. Por favor, inténtelo de nuevo.");
+        }
+    }
+
+    function fechaActual() {
+        const f = new Date();
+        return f.toLocaleDateString() + ' ' + f.toLocaleTimeString();
+    }
+
+    function cerrarFormularioNuevo() {
+        document.getElementById('formNuevoRiesgo').classList.remove('visible');
+    }
+
+    function cerrarFormularioDatos() {
+        document.getElementById('formIngresarDatos').classList.remove('visible');
+        celdaEnEdicion = null;
+    }
+
+    function abrirFormularioDatos(celda, label) {
+        celdaEnEdicion = celda;
+        labelParaFormulario = label;
+        document.getElementById('lblIngresarDatos').textContent = label;
+        const currentText = celda.querySelector('.btn-ingresar-datos') ? '' : celda.textContent.trim();
+        document.getElementById('txtIngresarDatos').value = currentText;
+        document.getElementById('formIngresarDatos').classList.add('visible');
+    }
+
+    function guardarDatos() {
+        const riesgos = [];
+        document.querySelectorAll('#tablaRiesgos tr').forEach(tr => {
+            const celdas = tr.children;
+            const riesgo = {
+                fecha: celdas[0].textContent,
+                categoria: celdas[1].textContent,
+                descripcion: celdas[2].textContent.replace('Ingresar Datos', '').trim(),
+                persona: celdas[3].textContent.replace('Ingresar Datos', '').trim(),
+                acciones: celdas[4].textContent.replace('Ingresar Datos', '').trim(),
+                fechaFinalizacion: celdas[5].textContent.replace('Finalizar', '').trim()
+            };
+            riesgos.push(riesgo);
+        });
+        localStorage.setItem('riesgosData', JSON.stringify(riesgos));
+    }
+
+    function guardarDatosEnCelda() {
+        if (celdaEnEdicion) {
+            const valor = document.getElementById('txtIngresarDatos').value.trim();
+            celdaEnEdicion.innerHTML = '';
+            if (valor) {
+                celdaEnEdicion.textContent = valor;
+            }
+            if (!valor) {
+                const btn = document.createElement('button');
+                btn.className = 'btn-ingresar-datos';
+                btn.textContent = 'Ingresar Datos';
+                btn.onclick = () => abrirFormularioDatos(celdaEnEdicion, labelParaFormulario);
+                celdaEnEdicion.appendChild(btn);
+            }
+            guardarDatos();
+            cerrarFormularioDatos();
+        }
+    }
+
+    function crearBotonIngresarDatos(celda, label) {
+        const btn = document.createElement('button');
+        btn.className = 'btn-ingresar-datos';
+        btn.textContent = 'Ingresar Datos';
+        btn.onclick = () => abrirFormularioDatos(celda, label);
+        celda.appendChild(btn);
+    }
+
+    function crearBotonFinalizar(celda) {
+        const btn = document.createElement('button');
+        btn.className = 'btn-finalizar';
+        btn.textContent = 'Finalizar';
+        btn.onclick = () => {
+            celda.textContent = fechaActual();
+            guardarDatos();
+        };
+        celda.appendChild(btn);
+    }
+
+    function guardarNuevoRiesgo() {
+        const fecha = fechaActual();
+        const categoria = document.getElementById('selCategoria').value;
+
+        const tbody = document.getElementById('tablaRiesgos');
+        const fila = document.createElement('tr');
+
+        const celdaFecha = document.createElement('td');
+        celdaFecha.textContent = fecha;
+        fila.appendChild(celdaFecha);
+
+        const celdaCategoria = document.createElement('td');
+        celdaCategoria.textContent = categoria;
+        fila.appendChild(celdaCategoria);
+
+        const celdaDescripcion = document.createElement('td');
+        crearBotonIngresarDatos(celdaDescripcion, 'Descripción del Riesgo:');
+        fila.appendChild(celdaDescripcion);
+
+        const celdaPersona = document.createElement('td');
+        crearBotonIngresarDatos(celdaPersona, 'Persona o Área Involucrada:');
+        fila.appendChild(celdaPersona);
+
+        const celdaAcciones = document.createElement('td');
+        crearBotonIngresarDatos(celdaAcciones, 'Acciones Tomadas:');
+        fila.appendChild(celdaAcciones);
+
+        const celdaFinalizar = document.createElement('td');
+        crearBotonFinalizar(celdaFinalizar);
+        fila.appendChild(celdaFinalizar);
+
+        const celdaBoton = document.createElement('td');
+        celdaBoton.className = 'celda-acciones';
+        const btnEliminar = document.createElement('button');
+        btnEliminar.className = 'btn-eliminar-windows';
+        btnEliminar.innerHTML = '❌';
+        btnEliminar.onclick = () => {
+            const inputPassword = prompt("Por favor, ingrese la contraseña para eliminar:");
+            if (inputPassword === PASSWORD_ELIMINAR) {
+                fila.remove();
+                guardarDatos();
+            } else {
+                alert("Contraseña incorrecta. La fila no puede ser eliminada.");
+            }
+        };
+        celdaBoton.appendChild(btnEliminar);
+        fila.appendChild(celdaBoton);
+
+        tbody.appendChild(fila);
+        guardarDatos();
+        cerrarFormularioNuevo();
+    }
+
+    function cargarDatos() {
+        const datos = localStorage.getItem('riesgosData');
+        if (datos) {
+            const riesgos = JSON.parse(datos);
+            const tbody = document.getElementById('tablaRiesgos');
+            tbody.innerHTML = '';
+            riesgos.forEach(riesgo => {
+                const fila = document.createElement('tr');
+                
+                const celdaFecha = document.createElement('td');
+                celdaFecha.textContent = riesgo.fecha;
+                fila.appendChild(celdaFecha);
+                
+                const celdaCategoria = document.createElement('td');
+                celdaCategoria.textContent = riesgo.categoria;
+                fila.appendChild(celdaCategoria);
+
+                const celdaDescripcion = document.createElement('td');
+                if (riesgo.descripcion) {
+                    celdaDescripcion.textContent = riesgo.descripcion;
+                } else {
+                    crearBotonIngresarDatos(celdaDescripcion, 'Descripción del Riesgo:');
+                }
+                fila.appendChild(celdaDescripcion);
+
+                const celdaPersona = document.createElement('td');
+                if (riesgo.persona) {
+                    celdaPersona.textContent = riesgo.persona;
+                } else {
+                    crearBotonIngresarDatos(celdaPersona, 'Persona o Área Involucrada:');
+                }
+                fila.appendChild(celdaPersona);
+
+                const celdaAcciones = document.createElement('td');
+                if (riesgo.acciones) {
+                    celdaAcciones.textContent = riesgo.acciones;
+                } else {
+                    crearBotonIngresarDatos(celdaAcciones, 'Acciones Tomadas:');
+                }
+                fila.appendChild(celdaAcciones);
+
+                const celdaFinalizar = document.createElement('td');
+                if (riesgo.fechaFinalizacion) {
+                    celdaFinalizar.textContent = riesgo.fechaFinalizacion;
+                } else {
+                    crearBotonFinalizar(celdaFinalizar);
+                }
+                fila.appendChild(celdaFinalizar);
+
+                const celdaBoton = document.createElement('td');
+                celdaBoton.className = 'celda-acciones';
+                const btnEliminar = document.createElement('button');
+                btnEliminar.className = 'btn-eliminar-windows';
+                btnEliminar.innerHTML = '❌';
+                btnEliminar.onclick = () => {
+                    const inputPassword = prompt("Por favor, ingrese la contraseña para eliminar:");
+                    if (inputPassword === PASSWORD_ELIMINAR) {
+                        fila.remove();
+                        guardarDatos();
+                    } else {
+                        alert("Contraseña incorrecta. La fila no puede ser eliminada.");
+                    }
+                };
+                celdaBoton.appendChild(btnEliminar);
+                fila.appendChild(celdaBoton);
+
+                tbody.appendChild(fila);
+            });
+        }
+    }
+
+    document.getElementById('btnNuevoRiesgo').addEventListener('click', () => {
+        document.getElementById('formNuevoRiesgo').classList.add('visible');
+    });
+
+    document.getElementById('guardarRiesgoBtn').addEventListener('click', guardarNuevoRiesgo);
+    document.getElementById('cancelarRiesgoBtn').addEventListener('click', cerrarFormularioNuevo);
+    document.getElementById('guardarDatosBtn').addEventListener('click', guardarDatosEnCelda);
+    document.getElementById('cancelarDatosBtn').addEventListener('click', cerrarFormularioDatos);
+
+    window.onload = () => {
+        if (sessionStorage.getItem('loggedIn') === 'true') {
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            cargarDatos();
+        } else {
+            document.getElementById('login-container').style.display = 'flex';
+            document.getElementById('main-content').style.display = 'none';
+        }
+    };
+</script>
+</body>
+</html>
